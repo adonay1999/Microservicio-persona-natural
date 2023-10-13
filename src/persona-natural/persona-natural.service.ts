@@ -4,9 +4,7 @@ import { Prisma, personas_naturales } from '@prisma/client';
 
 @Injectable()
 export class PersonaNaturalService {
-  constructor(
-    private readonly model: PrismaService,
-  ) {}
+  constructor(private readonly model: PrismaService) {}
 
   async create(
     personaNatural: Prisma.personas_naturalesCreateInput,
@@ -16,19 +14,32 @@ export class PersonaNaturalService {
     });
   }
 
-  async findAll(): Promise<personas_naturales[]> {
+  async findAll(filters): Promise<personas_naturales[]> {
     return await this.model.personas_naturales.findMany({
-      select: {
-        id_persona_natural: true,
-        dui: true,
-        nombres: true,
-        apellidos: true,
-        genero: true,
-        detalle_direccion: true,
-        fecha_nacimiento: true,
-        id_municipio: true,
-        fecha_vencidmiento_dui: true,
-        creado_en: true,
+      where: {
+        genero: filters.genero,
+        municipio: {
+          nombre: {
+            contains: filters.municipio,
+          },
+          departamentos: {
+            nombre: filters.departamento,
+          },
+        },
+      },
+      include: {
+        municipio: {
+          select: {
+            id_municipio: true,
+            nombre: true,
+            departamentos: {
+              select: {
+                id_departamento: true,
+                nombre: true,
+              },
+            },
+          },
+        },
       },
     });
   }
@@ -55,5 +66,50 @@ export class PersonaNaturalService {
     });
 
     return personas_naturales;
+  }
+
+  async findByDui(dui: string) {
+    return await this.model.personas_naturales.findUnique({
+      where: {
+        dui: dui,
+      },
+      include: {
+        detalles_sufragio: true,
+        municipio: {
+          include: {
+            departamentos: true,
+          },
+        },
+      },
+    });
+  }
+
+  async findByFilters(filters: any) {
+    return await this.model.personas_naturales.findMany({
+      where: {
+        OR: [
+          {
+            genero: filters.genero,
+          },
+          {
+            id_municipio: filters.id_municipio,
+          },
+        ],
+      },
+      include: {
+        municipio: {
+          select: {
+            id_municipio: true,
+            nombre: true,
+            departamentos: {
+              select: {
+                id_departamento: true,
+                nombre: true,
+              },
+            },
+          },
+        },
+      },
+    });
   }
 }
