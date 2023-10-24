@@ -15,6 +15,7 @@ enum Genero {
 
 enum EstadoVoto {
   SIN_EMITIR
+  VALIDADO
   EMITIDO
 }
 
@@ -62,7 +63,7 @@ model personas_naturales {
   id_municipio           Int
   detalle_direccion      String   @db.Text
   fecha_nacimiento       DateTime @db.Date
-  fecha_vencimiento_dui DateTime
+  fecha_vencimiento_dui  DateTime
   creado_en              DateTime @default(now())
 
   municipio            municipios             @relation(fields: [id_municipio], references: [id_municipio])
